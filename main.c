@@ -1,6 +1,8 @@
 #include "get_next_line.h"
 #include <stdio.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdlib.h>
 
 static void	test_single_fd(const char *path, const char *label)
 {
@@ -12,21 +14,22 @@ static void	test_single_fd(const char *path, const char *label)
 	fd = open(path, O_RDONLY);
 	if (fd < 0)
 	{
-		printf("could not open file\n");
+		printf("could not open file (make sure %s exists)\n", path);
 		return ;
 	}
 	count = 0;
 	while ((line = get_next_line(fd)) != NULL)
 	{
 		count++;
-		printf("[%d] len=%d :: %.60s%s\n", count, (int)ft_strlen(line),
-			line, ft_strlen(line) > 60 ? "...(truncated for display)" : "");
+		printf("[%d] len=%d :: %.60s%s\n", count, (int)strlen(line),
+			line, strlen(line) > 60 ? "...(truncated for display)" : "");
 		free(line);
 	}
 	printf("(NULL returned, total lines read: %d)\n", count);
 	close(fd);
 }
 
+#ifdef BONUS
 static void	test_two_fds_interleaved(const char *path1, const char *path2)
 {
 	int		fd1;
@@ -35,7 +38,7 @@ static void	test_two_fds_interleaved(const char *path1, const char *path2)
 	char	*l2;
 	int		round;
 
-	printf("\n--- Interleaved read: two fds at once ---\n");
+	printf("\n--- Interleaved read: two fds at once (Bonus) ---\n");
 	fd1 = open(path1, O_RDONLY);
 	fd2 = open(path2, O_RDONLY);
 	if (fd1 < 0 || fd2 < 0)
@@ -48,10 +51,8 @@ static void	test_two_fds_interleaved(const char *path1, const char *path2)
 	{
 		l1 = get_next_line(fd1);
 		l2 = get_next_line(fd2);
-		printf("round %d | fd1: %s", round,
-			l1 ? l1 : "(NULL)\n");
-		printf("round %d | fd2: %s", round,
-			l2 ? l2 : "(NULL)\n");
+		printf("round %d | fd1: %s", round, l1 ? l1 : "(NULL)\n");
+		printf("round %d | fd2: %s", round, l2 ? l2 : "(NULL)\n");
 		if (l1)
 			free(l1);
 		if (l2)
@@ -61,6 +62,7 @@ static void	test_two_fds_interleaved(const char *path1, const char *path2)
 	close(fd1);
 	close(fd2);
 }
+#endif
 
 static void	test_invalid_fd(void)
 {
@@ -101,7 +103,12 @@ int	main(int argc, char **argv)
 	test_single_fd("long_line.txt", "One very long line (5000+ chars)");
 	test_single_fd("many_lines.txt", "1000 lines");
 
+#ifdef BONUS
 	test_two_fds_interleaved("normal.txt", "many_lines.txt");
+#else
+	printf("\n[Notice] Skipping interleaved multi-fd test (Compile with -D BONUS if evaluating bonus)\n");
+#endif
+
 	test_invalid_fd();
 
 	if (argc > 1 && argv[1][0] == 's')
