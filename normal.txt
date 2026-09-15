@@ -1,0 +1,3 @@
+First line here
+Second line is a bit longer than the first one
+Third and final line, no newline at the end
